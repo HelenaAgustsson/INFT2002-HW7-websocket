@@ -1,12 +1,14 @@
 import ReactDOM from 'react-dom';
 import * as React from 'react';
-import { Whiteboard } from './whiteboard-component';
+import { Chat } from './chat-component';
 import { Alert } from './widgets';
 
-ReactDOM.render(
-  <>
-    <Alert />
-    <Whiteboard />
-  </>,
-  document.getElementById('root')
-);
+const root = document.getElementById('root');
+if (root)
+  ReactDOM.render(
+    <>
+      <Alert />
+      <Chat />
+    </>,
+    root
+  );
