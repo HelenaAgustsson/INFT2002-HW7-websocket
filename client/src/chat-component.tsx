@@ -11,6 +11,7 @@ export class Chat extends Component {
   users: string[] = [];
   user = '';
   message = '';
+  connection: WebSocket | null = null;
 
   render() {
     return (
@@ -31,12 +32,11 @@ export class Chat extends Component {
               <Form.Input
                 type="text"
                 placeholder="User"
-                disabled={this.subscription}
                 value={this.user}
                 onChange={(e) => (this.user = e.currentTarget.value)}
                 onKeyUp={(e: KeyboardEvent<HTMLInputElement>) => {
                   if (e.key == 'Enter') {
-                    if (!this.subscription) {
+                    /**if (!this.subscription) {
                       // Subscribe to chatService to receive events from Chat server in this component
                       this.subscription = chatService.subscribe();
 
@@ -53,8 +53,14 @@ export class Chat extends Component {
 
                       // Called on incoming message
                       this.subscription.onmessage = (message) => {
-                        if ('text' in message) this.messages.push(message.text);
-                        if ('users' in message) this.users = message.users;
+                        if ('text' in message) {
+                          this.messages.push(message.text);
+                          console.log(message.text);
+                        }
+                        if ('users' in message) {
+                          this.users = message.users;
+                          console.log(message.users);
+                        }
                       };
 
                       // Called if connection is closed
@@ -70,7 +76,7 @@ export class Chat extends Component {
                         this.connected = false;
                         Alert.danger('Connection error: ' + error.message);
                       };
-                    }
+                    } */
                   }
                 }}
               />
@@ -95,6 +101,65 @@ export class Chat extends Component {
         </Card>
       </Card>
     );
+  }
+
+  mounted() {
+    // Subscribe to chatService to receive events from Chat server in this component
+    this.subscription = chatService.subscribe();
+
+    // Called when connection is ready
+    this.subscription.onopen = () => {
+      this.connected = true;
+      chatService.send({ addUser: this.user });
+
+      // Remove user when web page is closed
+      window.addEventListener('beforeunload', () => chatService.send({ removeUser: this.user }));
+    };
+
+    // Called on incoming message
+    this.subscription.onmessage = (message) => {
+      if ('text' in message) {
+        this.messages.push(message.text);
+        console.log(message.text);
+      }
+
+      if ('users' in message) {
+        this.users = message.users;
+        this.users.push(this.user);
+        console.log('USERS' + message.users);
+      }
+    };
+
+    // Called if connection is closed
+    this.subscription.onclose = (code, reason) => {
+      this.connected = false;
+      Alert.danger('Connection closed with code ' + code + ' and reason: ' + reason);
+    };
+
+    // Called on connection error
+    this.subscription.onerror = (error) => {
+      this.connected = false;
+      Alert.danger('Connection error: ' + error.message);
+    };
+    /**
+     * this.subscription = chatService.subscribe();
+    this.subscription.onopen = () => {
+      this.connected = true;
+    };
+    this.subscription.onmessage = (message) => {
+      console.log(message);
+    };
+     * 
+     * 
+     * 
+     * this.connection = new WebSocket('ws://localhost:3000/api/v1/chat');
+    this.connection.onopen = () => {
+      this.connected = true;
+    };
+    chatService.subscribe();
+     */
+    //Called on incoming message
+    //this.connection.onmessage = (message) => {};
   }
 
   // Unsubscribe from chatService when component is no longer in use
